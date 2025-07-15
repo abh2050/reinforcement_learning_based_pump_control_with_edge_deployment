@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  ai-pump-control:
+    build: .
+    container_name: ai-pump-control-system
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - TZ=UTC
+    volumes:
+      - ./models:/app/models
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - pump-network
+    depends_on:
+      - mqtt-broker
+
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mqtt-config:/mosquitto/config
+      - ./mqtt-data:/mosquitto/data
+      - ./mqtt-logs:/mosquitto/log
+    networks:
+      - pump-network
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - pump-network
+    command: redis-server --appendonly yes
+
+  monitoring:
+    image: grafana/grafana:latest
+    container_name: pump-monitoring
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/provisioning:/etc/grafana/provisioning
+    networks:
+      - pump-network
+    depends_on:
+      - influxdb
+
+  influxdb:
+    image: influxdb:2.0
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=pump_data
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin123
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    networks:
+      - pump-network
+
+networks:
+  pump-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  grafana-data:
+    driver: local
+  influxdb-data:
+    driver: local

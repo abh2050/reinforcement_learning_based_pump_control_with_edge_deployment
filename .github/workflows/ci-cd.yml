@@ -1,0 +1,238 @@
+name: AI Pump Control System CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10"]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Create synthetic data
+      run: |
+        python -c "
+        import pandas as pd
+        import numpy as np
+        from datetime import datetime, timedelta
+        
+        # Generate synthetic data for testing
+        np.random.seed(42)
+        n_samples = 1000
+        
+        data = {
+            'timestamp': [datetime.now() + timedelta(minutes=i) for i in range(n_samples)],
+            'pump_speed_rpm': np.random.uniform(1500, 2200, n_samples),
+            'valve_position': np.random.uniform(0.4, 1.0, n_samples),
+            'flow_rate_lpm': np.random.uniform(100, 300, n_samples),
+            'pressure_psi': np.random.uniform(1, 8, n_samples),
+            'reward': np.random.uniform(-10, -1, n_samples)
+        }
+        
+        df = pd.DataFrame(data)
+        df.to_csv('Synthetic_Pump_System_Data.csv', index=False)
+        print('Synthetic data created for testing')
+        "
+    
+    - name: Test hybrid control model
+      run: |
+        python -c "
+        from hybrid_control_model import HybridControlModel, RewardFunction
+        import pandas as pd
+        
+        # Test hybrid model
+        data = pd.read_csv('Synthetic_Pump_System_Data.csv')
+        model = HybridControlModel()
+        metrics = model.train_ml_component(data)
+        
+        # Test prediction
+        prediction = model.predict(1800, 0.7)
+        print('Hybrid model test passed')
+        
+        # Test reward function
+        reward_func = RewardFunction()
+        reward = reward_func.calculate_reward(200, 4.0, 1800, 0.7)
+        print('Reward function test passed')
+        "
+    
+    - name: Test RL environment
+      run: |
+        python -c "
+        from hybrid_control_model import HybridControlModel, RewardFunction
+        from rl_agent import PumpControlEnvironment
+        import pandas as pd
+        
+        # Test RL environment
+        data = pd.read_csv('Synthetic_Pump_System_Data.csv')
+        model = HybridControlModel()
+        model.train_ml_component(data)
+        
+        reward_func = RewardFunction()
+        env = PumpControlEnvironment(model, reward_func, max_steps=10)
+        
+        # Test environment
+        state, _ = env.reset()
+        action = [0.0, 0.0]
+        next_state, reward, done, _, info = env.step(action)
+        print('RL environment test passed')
+        "
+    
+    - name: Test API endpoints
+      run: |
+        python -c "
+        from fastapi.testclient import TestClient
+        from edge_deployment import app
+        import pandas as pd
+        
+        # Create test data
+        data = pd.read_csv('Synthetic_Pump_System_Data.csv')
+        
+        # Test API
+        client = TestClient(app)
+        
+        # Test health endpoint
+        response = client.get('/health')
+        assert response.status_code == 200
+        
+        # Test status endpoint
+        response = client.get('/status')
+        assert response.status_code == 200
+        
+        # Test prediction endpoint
+        response = client.post('/predict', json={'pump_speed_rpm': 1800, 'valve_position': 0.7})
+        assert response.status_code == 200
+        
+        print('API endpoints test passed')
+        "
+    
+    - name: Generate test report
+      run: |
+        echo '# Test Results' > test_report.md
+        echo '## Test Matrix' >> test_report.md
+        echo "- Python Version: ${{ matrix.python-version }}" >> test_report.md
+        echo "- OS: ubuntu-latest" >> test_report.md
+        echo "- Status: ✅ All tests passed" >> test_report.md
+        echo "- Timestamp: $(date)" >> test_report.md
+        
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          test_report.md
+          Synthetic_Pump_System_Data.csv
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Build deployment package
+      run: |
+        mkdir -p deployment
+        cp *.py deployment/
+        cp requirements.txt deployment/
+        cp README.md deployment/
+        cp PROJECT_SUMMARY.md deployment/
+        
+        # Create deployment script
+        cat > deployment/deploy.sh << 'EOF'
+        #!/bin/bash
+        echo "🚀 Deploying AI Pump Control System..."
+        
+        # Install dependencies
+        pip install -r requirements.txt
+        
+        # Generate synthetic data if not exists
+        if [ ! -f "Synthetic_Pump_System_Data.csv" ]; then
+            python -c "
+        import pandas as pd
+        import numpy as np
+        from datetime import datetime, timedelta
+        
+        np.random.seed(42)
+        n_samples = 1000
+        
+        data = {
+            'timestamp': [datetime.now() + timedelta(minutes=i) for i in range(n_samples)],
+            'pump_speed_rpm': np.random.uniform(1500, 2200, n_samples),
+            'valve_position': np.random.uniform(0.4, 1.0, n_samples),
+            'flow_rate_lpm': np.random.uniform(100, 300, n_samples),
+            'pressure_psi': np.random.uniform(1, 8, n_samples),
+            'reward': np.random.uniform(-10, -1, n_samples)
+        }
+        
+        df = pd.DataFrame(data)
+        df.to_csv('Synthetic_Pump_System_Data.csv', index=False)
+            "
+        fi
+        
+        # Run system tests
+        python test_system.py
+        
+        # Start the system
+        echo "✅ System ready for deployment!"
+        echo "Run 'python edge_deployment.py' to start the API server"
+        EOF
+        
+        chmod +x deployment/deploy.sh
+        
+    - name: Create deployment artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: deployment-package
+        path: deployment/
+        
+    - name: Generate deployment documentation
+      run: |
+        echo "# Deployment Package" > DEPLOYMENT.md
+        echo "" >> DEPLOYMENT.md
+        echo "## Quick Start" >> DEPLOYMENT.md
+        echo "1. Download the deployment package" >> DEPLOYMENT.md
+        echo "2. Extract to your target environment" >> DEPLOYMENT.md
+        echo "3. Run: \`chmod +x deploy.sh && ./deploy.sh\`" >> DEPLOYMENT.md
+        echo "4. Start the system: \`python edge_deployment.py\`" >> DEPLOYMENT.md
+        echo "" >> DEPLOYMENT.md
+        echo "## System Requirements" >> DEPLOYMENT.md
+        echo "- Python 3.8+" >> DEPLOYMENT.md
+        echo "- 2GB RAM minimum" >> DEPLOYMENT.md
+        echo "- 1GB storage space" >> DEPLOYMENT.md
+        echo "- Network access for MQTT (optional)" >> DEPLOYMENT.md
+        echo "" >> DEPLOYMENT.md
+        echo "## Supported Platforms" >> DEPLOYMENT.md
+        echo "- Raspberry Pi 4" >> DEPLOYMENT.md
+        echo "- NVIDIA Jetson Nano" >> DEPLOYMENT.md
+        echo "- Industrial PCs" >> DEPLOYMENT.md
+        echo "- Docker containers" >> DEPLOYMENT.md
+        echo "- Cloud instances" >> DEPLOYMENT.md
