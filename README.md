@@ -1,3 +1,4 @@
+![](https://cdn.vev.design/cdn-cgi/image/f=auto,q=82/private/4VWziEfAhZXU3WGXfH8aAwJf2cJ3/image/ep1Jnw1n7M.jpg)
 # AI-Driven Pump Control System
 
 [![CI/CD Pipeline](https://github.com/abh2050/reinforcement_learning_based_pump_control_with_edge_deployment/workflows/AI%20Pump%20Control%20System%20CI/CD/badge.svg)](https://github.com/abh2050/reinforcement_learning_based_pump_control_with_edge_deployment/actions)
