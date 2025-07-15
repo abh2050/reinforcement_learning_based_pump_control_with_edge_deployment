@@ -468,6 +468,7 @@ async def root():
         "status": "running"
     }
 
+# Health check endpoint
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
@@ -478,8 +479,7 @@ async def health_check():
             "hybrid_model": hybrid_model is not None,
             "reward_function": reward_function is not None,
             "rl_agent": rl_agent is not None
-        },
-        "mqtt_connected": mqtt_handler.connected if MQTT_AVAILABLE else False
+        }
     }
 
 @app.get("/status", response_model=SystemStatus)
@@ -518,6 +518,11 @@ async def send_control_command(command: ControlCommand):
 async def predict_system_response(request: PredictionRequest):
     """Predict system response for given control inputs"""
     try:
+        # Check if models are loaded
+        if not hybrid_model:
+            # Try to load models if not already loaded
+            await load_models()
+            
         if not hybrid_model:
             raise HTTPException(status_code=503, detail="Hybrid model not available")
         
@@ -534,16 +539,19 @@ async def predict_system_response(request: PredictionRequest):
                 request.valve_position
             )
         
-        # Publish prediction to MQTT
-        prediction_data = {
-            "pump_speed_rpm": request.pump_speed_rpm,
-            "valve_position": request.valve_position,
-            "predicted_flow": prediction['flow_rate_lpm'],
-            "predicted_pressure": prediction['pressure_psi'],
-            "predicted_reward": reward,
-            "timestamp": datetime.now().isoformat()
-        }
-        mqtt_handler.publish_prediction(prediction_data)
+        # Try to publish prediction to MQTT (optional)
+        try:
+            prediction_data = {
+                "pump_speed_rpm": request.pump_speed_rpm,
+                "valve_position": request.valve_position,
+                "predicted_flow": prediction['flow_rate_lpm'],
+                "predicted_pressure": prediction['pressure_psi'],
+                "predicted_reward": reward,
+                "timestamp": datetime.now().isoformat()
+            }
+            mqtt_handler.publish_prediction(prediction_data)
+        except Exception as mqtt_error:
+            logger.warning(f"Failed to publish MQTT prediction: {mqtt_error}")
         
         return PredictionResponse(
             flow_rate_lpm=prediction['flow_rate_lpm'],
@@ -554,6 +562,7 @@ async def predict_system_response(request: PredictionRequest):
         )
     
     except Exception as e:
+        logger.error(f"Error making prediction: {e}")
         raise HTTPException(status_code=500, detail=f"Error making prediction: {str(e)}")
 
 @app.get("/optimize")
