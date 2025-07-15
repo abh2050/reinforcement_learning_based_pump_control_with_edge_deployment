@@ -361,10 +361,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact
 
 **Author**: Abhishek Shah  
-**Email**: your.email@example.com  
-**LinkedIn**: [Your LinkedIn Profile](https://linkedin.com/in/yourprofile)  
-**GitHub**: [Your GitHub Profile](https://github.com/yourusername)
-
 ---
 
 *This project is designed to showcase advanced AI/ML capabilities in industrial control systems, specifically aligned with Rockwell Automation's technology stack and industry focus.*
