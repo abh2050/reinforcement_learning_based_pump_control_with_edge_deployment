@@ -563,15 +563,11 @@ The RL agent was successfully trained with the following performance metrics:
 - **Edge AI**: On-device training and adaptation
 - **Quantum Computing**: Optimization algorithms
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
 ### Development Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ai-pump-control.git
+git clone https://github.com/abh2050/reinforcement_learning_based_pump_control_with_edge_deployment
 cd ai-pump-control
 
 # Create virtual environment
@@ -587,7 +583,7 @@ python -m pytest tests/
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License
 
 ## 🔗 References
 
