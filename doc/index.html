@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1718">
+  <meta name="description" content="Explainer page for an AI-driven pump control system using hybrid physics + ML and reinforcement learning.">
+  <title>Intelligent Pump Control — Explainer</title>
+  <style>
+    :root {
+      --bg: #091719;
+      --bg-2: #0f2023;
+      --panel: #122526;
+      --ink: #edf5ef;
+      --muted: #a9bdb5;
+      --line: rgba(232, 239, 236, 0.12);
+      --mint: #aaf2ca;
+      --lime: #d9ff86;
+      --cyan: #8ad7ef;
+      --orange: #ffc98f;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, #0b1a1d 100%);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    a { color: var(--mint); text-decoration: none; }
+    a:hover { color: var(--lime); }
+
+    .shell {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding: 18px 0;
+      font-size: 0.9rem;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 11px;
+      background: rgba(170, 242, 202, 0.14);
+      border: 1px solid rgba(170, 242, 202, 0.4);
+      display: grid;
+      place-items: center;
+      color: var(--mint);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 48px;
+      align-items: center;
+      padding: 84px 0 72px;
+    }
+
+    .eyebrow {
+      font-size: 0.74rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--mint);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 16px 0 18px;
+      font-size: clamp(2.7rem, 6vw, 5.2rem);
+      line-height: 0.98;
+      letter-spacing: -0.07em;
+      max-width: 680px;
+    }
+
+    h1 .accent { color: var(--lime); }
+
+    .lede {
+      color: var(--muted);
+      font-size: 1.08rem;
+      max-width: 600px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: transparent;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .button.primary {
+      background: var(--mint);
+      color: #092122;
+      border-color: var(--mint);
+    }
+
+    .hero-art {
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: radial-gradient(circle at 50% 30%, rgba(139, 215, 239, 0.15), rgba(18, 37, 38, 0.9) 60%);
+      padding: 18px;
+      box-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-art svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .caption {
+      margin: 10px 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      padding-bottom: 70px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(18, 37, 38, 0.7);
+      padding: 18px 16px;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--lime);
+      font-size: 1.5rem;
+      letter-spacing: -0.04em;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    section {
+      padding: 70px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-head {
+      max-width: 680px;
+      margin-bottom: 28px;
+    }
+
+    h2 {
+      margin: 10px 0 12px;
+      font-size: clamp(1.85rem, 4vw, 2.9rem);
+      letter-spacing: -0.06em;
+    }
+
+    .muted { color: var(--muted); }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      padding: 22px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(19, 37, 38, 0.9), rgba(11, 26, 27, 0.8));
+    }
+
+    .number {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid rgba(170, 242, 202, 0.45);
+      color: var(--mint);
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    h3 {
+      margin: 15px 0 8px;
+      font-size: 1.08rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .code {
+      margin-top: 18px;
+      color: var(--cyan);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(18, 37, 38, 0.85);
+      padding: 24px;
+    }
+
+    .panel h3 { margin-top: 0; }
+
+    .list {
+      padding-left: 1.2rem;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .list li { margin: 8px 0; }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 52px;
+      gap: 12px;
+      align-items: center;
+      margin: 18px 0;
+      font-size: 0.85rem;
+    }
+
+    .track {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(76, 95, 95, 0.85);
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--mint), var(--lime));
+      border-radius: inherit;
+    }
+
+    .fill.warn {
+      background: linear-gradient(90deg, #ffc98f, #ffb87d);
+    }
+
+    .note {
+      padding: 18px 22px;
+      border-left: 4px solid var(--orange);
+      border-radius: 0 10px 10px 0;
+      background: rgba(40, 35, 25, 0.75);
+      color: #f3e7d2;
+      font-size: 0.93rem;
+    }
+
+    .tech {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(19, 37, 38, 0.9);
+      color: #cfe7e8;
+      font-size: 0.8rem;
+    }
+
+    .closing {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      border: 1px solid rgba(170, 242, 202, 0.4);
+      border-radius: 16px;
+      background: linear-gradient(110deg, rgba(20, 52, 45, 0.9), rgba(12, 33, 34, 0.9));
+      padding: 24px;
+    }
+
+    .closing h3 { margin: 0 0 6px; }
+    .closing p { margin: 0; color: var(--muted); }
+
+    footer {
+      padding: 28px 0 48px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 800px) {
+      .hero { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 28px, 1120px); }
+      .split, .steps { grid-template-columns: 1fr; }
+      .closing { flex-direction: column; align-items: flex-start; }
+      .topbar { font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <div class="brand">
+      <span class="brand-mark">∿</span>
+      Pump Control Lab
+    </div>
+    <a href="https://github.com/abh2050/reinforcement_learning_based_pump_control_with_edge_deployment" target="_blank" rel="noreferrer">
+      View project on GitHub ↗
+    </a>
+  </header>
+
+  <main class="shell">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">AI + controls + edge deployment</div>
+        <h1>Smarter control for <span class="accent">pump systems.</span></h1>
+        <p class="lede">
+          This project combines a physics-based model, a machine learning predictor, and a reinforcement learning
+          agent to manage pump speed and valve position while balancing flow, pressure, efficiency, and stability.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="#how-it-works">Explore the system</a>
+          <a class="button" href="https://github.com/abh2050/reinforcement_learning_based_pump_control_with_edge_deployment/blob/main/README.md" target="_blank" rel="noreferrer">Read the README</a>
+        </div>
+      </div>
+
+      <div class="hero-art">
+        <svg viewBox="0 0 620 360" role="img" aria-label="Pump control loop diagram">
+          <defs>
+            <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+              <path d="M0,0 L0,12 L12,6 z" fill="#aaf2ca"/>
+            </marker>
+            <marker id="arrow2" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+              <path d="M0,0 L0,12 L12,6 z" fill="#8ad7ef"/>
+            </marker>
+          </defs>
+
+          <rect x="20" y="110" width="120" height="100" rx="18" fill="#18362d" stroke="#74cca4"/>
+          <text x="80" y="150" text-anchor="middle" fill="#aaf2ca" font-size="14" font-family="sans-serif">AI CONTROLLER</text>
+          <text x="80" y="182" text-anchor="middle" fill="#edf5ef" font-size="11" font-family="sans-serif">PPO + hybrid model</text>
+
+          <circle cx="240" cy="170" r="48" fill="#122c2d" stroke="#8ad7ef" stroke-width="2"/>
+          <text x="240" y="220" text-anchor="middle" fill="#edf5ef" font-size="12" font-family="sans-serif">PUMP + VALVE</text>
+
+          <rect x="390" y="110" width="120" height="100" rx="18" fill="#212d1f" stroke="#d9ff86"/>
+          <text x="450" y="150" text-anchor="middle" fill="#d9ff86" font-size="14" font-family="sans-serif">PROCESS</text>
+          <text x="450" y="182" text-anchor="middle" fill="#edf5ef" font-size="11" font-family="sans-serif">flow + pressure</text>
+
+          <path d="M140 170 H190" stroke="#aaf2ca" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M290 170 H370" stroke="#aaf2ca" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M510 170 H560" stroke="#aaf2ca" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M560 220 C560 300, 90 300, 90 220" stroke="#8ad7ef" stroke-width="2" stroke-dasharray="7 7" fill="none" marker-end="url(#arrow2)"/>
+
+          <text x="310" y="300" text-anchor="middle" fill="#a9bdb5" font-size="12" font-family="sans-serif">measure → predict → act → repeat</text>
+        </svg>
+        <p class="caption">Conceptual diagram of the control feedback loop.</p>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <strong>Hybrid</strong>
+        <span>Model combines physics + ML</span>
+      </div>
+      <div class="metric">
+        <strong>PPO</strong>
+        <span>Reinforcement-learning control</span>
+      </div>
+      <div class="metric">
+        <strong>51,200</strong>
+        <span>Training timesteps reported</span>
+      </div>
+      <div class="metric">
+        <strong>Edge</strong>
+        <span>FastAPI + MQTT interface</span>
+      </div>
+    </div>
+
+    <section id="how-it-works">
+      <div class="section-head">
+        <div class="eyebrow">How it works</div>
+        <h2>Four building blocks, one feedback loop.</h2>
+        <p class="muted">The project combines system modeling, learning from data, policy optimization, and edge deployment into a single control stack.</p>
+      </div>
+
+      <div class="steps">
+        <article class="card">
+          <span class="number">01</span>
+          <h3>Model the plant</h3>
+          <p>A simplified fluid-dynamics model estimates how pump speed and valve setting influence flow and pressure.</p>
+          <div class="code">speed + valve → response</div>
+        </article>
+
+        <article class="card">
+          <span class="number">02</span>
+          <h3>Learn from data</h3>
+          <p>Gradient-boosted models are trained on historical pump data to estimate system behavior.</p>
+          <div class="code">data → predictions</div>
+        </article>
+
+        <article class="card">
+          <span class="number">03</span>
+          <h3>Choose an action</h3>
+          <p>A PPO agent learns control actions that balance target flow, pressure, energy, and stability.</p>
+          <div class="code">state → actuator command</div>
+        </article>
+
+        <article class="card">
+          <span class="number">04</span>
+          <h3>Connect at the edge</h3>
+          <p>FastAPI routes and MQTT messaging provide status, prediction, and control interfaces.</p>
+          <div class="code">API · MQTT · monitoring</div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">Inside the controller</div>
+        <h2>Why combine physics and learning?</h2>
+        <p class="muted">A first-principles model gives structure and interpretability; a learned model fills in gaps that a simplified dynamics model may miss. The hybrid system blends both.</p>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <h3>What the agent balances</h3>
+          <ul class="list">
+            <li>Flow toward a target value</li>
+            <li>Pressure toward a target value</li>
+            <li>Efficient use of pump power</li>
+            <li>Stability to avoid oscillatory behavior</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h3>Reported evaluation snapshot</h3>
+          <p class="muted">This project reports a synthetic evaluation setup; performance numbers reflect its demo environment, not guaranteed field deployment results.</p>
+
+          <div class="score-row">
+            <span>Pressure</span>
+            <div class="track"><div class="fill" style="width:81%"></div></div>
+            <strong>81%</strong>
+          </div>
+
+          <div class="score-row">
+            <span>Flow</span>
+            <div class="track"><div class="fill warn" style="width:68%"></div></div>
+            <strong>68%</strong>
+          </div>
+
+          <p class="muted" style="font-size: 0.83rem;">
+            Reported errors included about 0.75 PSI pressure error and about 64 L/min flow error in the project’s sample evaluation.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">Interfaces & tools</div>
+        <h2>Prototype system with an edge-ready model.</h2>
+        <p class="muted">The project includes a Python control stack and operations tooling, making it easier to test and monitor a closed-loop system.</p>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <h3>Example API methods</h3>
+          <ul class="list">
+            <li><code>GET /status</code> and <code>GET /health</code></li>
+            <li><code>POST /predict</code> for model response estimates</li>
+            <li><code>GET /optimize</code> for an RL-based suggestion</li>
+            <li><code>POST /control</code> for a live command</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h3>Technology stack</h3>
+          <div class="tech">
+            <span class="tag">Python</span>
+            <span class="tag">scikit-learn</span>
+            <span class="tag">Gymnasium</span>
+            <span class="tag">Stable-Baselines3</span>
+            <span class="tag">FastAPI</span>
+            <span class="tag">MQTT</span>
+            <span class="tag">Docker</span>
+          </div>
+          <p class="muted" style="margin-top: 16px;">
+            This repository documents a demonstration workflow rather than a production safety-certified control system.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">Important context</div>
+        <h2>A prototype, not a certified control system.</h2>
+      </div>
+      <div class="note">
+        Before any real-world deployment, validate against actual sensor data, add independent safety interlocks,
+        and review the system with engineering controls and operating procedures appropriate for your environment.
+      </div>
+    </section>
+
+    <section>
+      <div class="closing">
+        <div>
+          <h3>Want to inspect the implementation?</h3>
+          <p>Explore the project README, model code, and training notes in the repository.</p>
+        </div>
+        <a class="button primary" href="https://github.com/abh2050/reinforcement_learning_based_pump_control_with_edge_deployment" target="_blank" rel="noreferrer">
+          Open the repository
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell">
+    Project explainer for <a href="https://github.com/abh2050/reinforcement_learning_based_pump_control_with_edge_deployment" target="_blank" rel="noreferrer">abh2050/reinforcement_learning_based_pump_control_with_edge_deployment</a>.
+  </footer>
+</body>
+</html>
