@@ -91,8 +91,9 @@ This is an integration surface for a prototype. The API does not connect to pump
 The diagram distinguishes **offline training** from the **runtime prototype**. Training the policy and serving an API are separate paths; only the prediction model is trained automatically by API startup. The saved PPO policy is an optional artifact.
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph TRAIN["01 · MODEL & POLICY DEVELOPMENT"]
+    direction TB
     CSV[("Synthetic pump data<br/>speed · valve · flow · pressure")]
     FEATURES["Feature engineering<br/>squared + interaction terms"]
     REGRESSORS["Two scikit-learn regressors<br/>flow model · pressure model"]
@@ -110,29 +111,22 @@ flowchart LR
   end
 
   subgraph SERVICE["02 · RUNTIME SERVICE"]
+    direction TB
     CLIENT["API client"]
     API["FastAPI + Pydantic"]
-    HEALTH["/health · /status"]
-    PREDICT["POST /predict"]
-    OPTIMIZE["GET /optimize<br/>suggestion when policy is loaded"]
-    CONTROL["POST /control<br/>update application command state"]
-    SIM["Background simulated loop<br/>model response + noise"]
+    ROUTES["API surface<br/>GET /health · /status<br/>POST /predict · /control<br/>GET /optimize · /history"]
+    LOAD["Load saved hybrid model<br/>or train from CSV at startup"]
+    LOOP["Background simulated loop<br/>model response + noise"]
     STATE["In-memory status<br/>and recent history"]
     MQTT["Optional Paho MQTT<br/>subscribe · publish · alerts"]
 
-    CLIENT --> API
-    API --> HEALTH
-    API --> PREDICT
-    API --> OPTIMIZE
-    API --> CONTROL
-    CONTROL --> SIM
-    SIM --> STATE
-    SIM --> MQTT
-    MQTT -. "control command" .-> CONTROL
+    CLIENT --> API --> ROUTES
+    API --> LOAD --> LOOP --> STATE --> MQTT
+    MQTT -. "control command" .-> API
   end
 
-  HYBRID -. "loaded, or trained at startup" .-> PREDICT
-  POLICY -. "optional checkpoint" .-> OPTIMIZE
+  HYBRID -. "prediction model" .-> LOOP
+  POLICY -. "optional checkpoint for /optimize" .-> ROUTES
 
   classDef data fill:#17221e,stroke:#77934a,color:#f2f0e9
   classDef model fill:#202820,stroke:#a8c94d,color:#f2f0e9
